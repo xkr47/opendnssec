@@ -71,7 +71,8 @@ help(int sockfd)
 }
 
 static int set_zone_policy(db_connection_t* dbconn, zone_db_t* zone, policy_t* policy) {
-	const db_value *wanted_policy_id = policy_id(policy);
+	const db_value_t* wanted_policy_id = policy_id(policy);
+	int cmp;
 
 	if (!db_value_cmp(zone_db_policy_id(zone), wanted_policy_id, &cmp)) {
         client_printf_err(sockfd, "Unable to update zone, database error!\n");
@@ -110,7 +111,6 @@ run(int sockfd, cmdhandler_ctx_type* context, char *cmd)
     char path[PATH_MAX];
     db_connection_t* dbconn = getconnectioncontext(context);
     engine_type* engine = getglobalcontext(context);
-	int cmp;
 
     static struct option long_options[] = {
         {"zone", required_argument, 0, 'z'},
