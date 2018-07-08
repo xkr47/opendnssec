@@ -36,9 +36,7 @@
 #include "log.h"
 #include "clientpipe.h"
 #include "db/zone_db.h"
-#include "keystate/zonelist_update.h"
-#include "enforcer/enforce_task.h"
-#include "hsmkey/hsm_key_factory.h"
+#include "keystate/zonelist_export.h"
 
 #include "keystate/zone_set_policy_cmd.h"
 
@@ -72,7 +70,7 @@ help(int sockfd)
     );
 }
 
-static int set_zone_policy(db_connection_t* dbconn, zone_db* zone, policy* policy) {
+static int set_zone_policy(db_connection_t* dbconn, zone_db_t* zone, policy* policy) {
 	const db_value *wanted_policy_id = policy_id(policy);
 
 	if (!db_value_cmp(zone_db_policy_id(zone), wanted_policy_id, &cmp)) {
@@ -107,11 +105,12 @@ run(int sockfd, cmdhandler_ctx_type* context, char *cmd)
     const char *zone_name = NULL;
     const char *policy_name = "default";
     int write_xml = 0;
-	int cmp;
-    int ret = 0;
     int long_index = 0, opt = 0;
+    int ret = 0;
+    char path[PATH_MAX];
     db_connection_t* dbconn = getconnectioncontext(context);
     engine_type* engine = getglobalcontext(context);
+	int cmp;
 
     static struct option long_options[] = {
         {"zone", required_argument, 0, 'z'},
@@ -166,7 +165,7 @@ run(int sockfd, cmdhandler_ctx_type* context, char *cmd)
         return 1;
     }
 
-	const policy_t* policy = policy_new_get_by_name(dbconn, policy_name);
+	policy_t* policy = policy_new_get_by_name(dbconn, policy_name);
 	if (!policy) {
         client_printf_err(sockfd, "Unable to update zone, policy does not exist!\n");
 		zone_db_free(zone);
@@ -174,7 +173,7 @@ run(int sockfd, cmdhandler_ctx_type* context, char *cmd)
 	}
 
     /* input looks okay, lets update the database */
-	ret = set_zone_policy(zone, policy);
+	ret = set_zone_policy(dbconn, zone, policy);
 
 	zone_db_free(zone);
 	policy_free(policy);
