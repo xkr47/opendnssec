@@ -70,7 +70,7 @@ help(int sockfd)
     );
 }
 
-static int set_zone_policy(db_connection_t* dbconn, zone_db_t* zone, policy_t* policy) {
+static int set_zone_policy(int sockfd, db_connection_t* dbconn, zone_db_t* zone, policy_t* policy) {
 	const db_value_t* wanted_policy_id = policy_id(policy);
 	int cmp;
 
@@ -173,7 +173,7 @@ run(int sockfd, cmdhandler_ctx_type* context, char *cmd)
 	}
 
     /* input looks okay, lets update the database */
-	ret = set_zone_policy(dbconn, zone, policy);
+	ret = set_zone_policy(sockfd, dbconn, zone, policy);
 
 	zone_db_free(zone);
 	policy_free(policy);
