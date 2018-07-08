@@ -70,7 +70,7 @@ help(int sockfd)
     );
 }
 
-static int set_zone_policy(db_connection_t* dbconn, zone_db_t* zone, policy* policy) {
+static int set_zone_policy(db_connection_t* dbconn, zone_db_t* zone, policy_t* policy) {
 	const db_value *wanted_policy_id = policy_id(policy);
 
 	if (!db_value_cmp(zone_db_policy_id(zone), wanted_policy_id, &cmp)) {
