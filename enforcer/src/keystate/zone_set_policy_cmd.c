@@ -136,7 +136,7 @@ run(int sockfd, cmdhandler_ctx_type* context, char *cmd)
                 zone_name = optarg;
                 break;
             case 'p':
-                policy_name = optarg;
+				policy_name = strdup(optarg);
                 break;
             case 'u':
                 write_xml = 1;
@@ -162,10 +162,12 @@ run(int sockfd, cmdhandler_ctx_type* context, char *cmd)
 	zone_db_t* zone = zone_db_new_get_by_name(dbconn, zone_name);
 	if (!zone) {
         client_printf_err(sockfd, "Unable to update zone, zone does not exist!\n");
+		free(policy_name);
         return 1;
     }
 
 	policy_t* policy = policy_new_get_by_name(dbconn, policy_name);
+	free(policy_name);
 	if (!policy) {
         client_printf_err(sockfd, "Unable to update zone, policy does not exist!\n");
 		zone_db_free(zone);
