@@ -151,6 +151,7 @@ run(int sockfd, cmdhandler_ctx_type* context, char *cmd)
 
     if (!zone_name) {
         client_printf_err(sockfd, "expected option --zone <zone>\n");
+		free(policy_name);
         return -1;
     } else if (!policy_name) {
         client_printf_err(sockfd, "expected option --policy <policy>\n");
