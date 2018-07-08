@@ -83,12 +83,12 @@ static int set_zone_policy(int sockfd, db_connection_t* dbconn, zone_db_t* zone,
 		return 0;
 	}
 
-	if (!zone_db_set_policy_id(zone, wanted_policy_id)) {
+	if (zone_db_set_policy_id(zone, wanted_policy_id)) {
         client_printf_err(sockfd, "Unable to update zone, database error!\n");
 		return 1;
 	}
 
-	if (!zone_db_update(zone)) {
+	if (zone_db_update(zone)) {
         client_printf(sockfd, "Failed to update zone in database.\n");
 		return 1;
 	}
