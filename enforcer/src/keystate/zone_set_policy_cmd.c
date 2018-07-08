@@ -104,7 +104,7 @@ run(int sockfd, cmdhandler_ctx_type* context, char *cmd)
     const char* argv[NARGV];
     int argc = 0;
     const char *zone_name = NULL;
-    const char *policy_name = NULL;
+    char *policy_name = NULL;
     int write_xml = 0;
     int long_index = 0, opt = 0;
     int ret = 0;
