@@ -74,7 +74,7 @@ static int set_zone_policy(int sockfd, db_connection_t* dbconn, zone_db_t* zone,
 	const db_value_t* wanted_policy_id = policy_id(policy);
 	int cmp;
 
-	if (!db_value_cmp(zone_db_policy_id(zone), wanted_policy_id, &cmp)) {
+	if (db_value_cmp(zone_db_policy_id(zone), wanted_policy_id, &cmp)) {
         client_printf_err(sockfd, "Unable to update zone, database error!\n");
 		return 1;
 	}
