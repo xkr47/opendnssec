@@ -93,7 +93,7 @@ static int set_zone_policy(int sockfd, db_connection_t* dbconn, zone_db_t* zone,
 		return 1;
 	}
     ods_log_info("[%s] zone %s policy updated to %s", module_str, zone_db_name(zone), policy_name(policy));
-    client_printf(sockfd, "Zone %s policy successfully set to %s\n", zone_db_name(zone));
+    client_printf(sockfd, "Zone %s policy successfully set to %s\n", zone_db_name(zone), policy_name(policy));
 	return 0;
 }
 
