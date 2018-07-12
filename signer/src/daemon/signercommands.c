@@ -135,6 +135,7 @@ cmdhandler_handle_cmd_update(int sockfd, cmdhandler_ctx_type* context, char *cmd
     ods_status status = ODS_STATUS_OK;
     zone_type* zone = NULL;
     ods_status zl_changed = ODS_STATUS_OK;
+    int i;    
     engine = getglobalcontext(context);
     ods_log_assert(engine->taskq);
     if (cmdargument(cmd, "--all", NULL)) {
@@ -171,22 +172,47 @@ cmdhandler_handle_cmd_update(int sockfd, cmdhandler_ctx_type* context, char *cmd
         }
     } else {
         /* look up zone */
-        pthread_mutex_lock(&engine->zonelist->zl_lock);
-        zone = zonelist_lookup_zone_by_name(engine->zonelist, cmdargument(cmd, NULL, ""),
-            LDNS_RR_CLASS_IN);
-        /* If this zone is just added, don't update (it might not have a
-         * task yet) */
-        if (zone && zone->zl_status == ZONE_ZL_ADDED) {
-            zone = NULL;
-        }
-        pthread_mutex_unlock(&engine->zonelist->zl_lock);
+	for (i=0; i<2; ++i) {
+	   pthread_mutex_lock(&engine->zonelist->zl_lock);
+	   zone = zonelist_lookup_zone_by_name(engine->zonelist, cmdargument(cmd, NULL, ""),
+	       LDNS_RR_CLASS_IN);
+	   /* If this zone is just added, don't update (it might not have a
+            * task yet) */
+	   if (zone && zone->zl_status == ZONE_ZL_ADDED) {
+	      pthread_mutex_unlock(&engine->zonelist->zl_lock);
+	      client_printf(sockfd, "Don't update now, zone just added. Updating later hopefully..\n");
+	      zone = NULL;
+	   } else if (!zone && i == 0) {
+	      pthread_mutex_unlock(&engine->zonelist->zl_lock);
+	      /* update all */
+	      cmdhandler_handle_cmd_update(sockfd, context, "update --all");
+	      continue;
+	      /*
+	      zl_changed = zonelist_update(engine->zonelist,
+					   engine->config->zonelist_filename_signer);
+	      if (zl_changed == ODS_STATUS_OK) {
+		 (void)snprintf(buf, ODS_SE_MAXLINE, "Zone list updated: %i "
+				"removed, %i added, %i updated.\n",
+				engine->zonelist->just_removed,
+				engine->zonelist->just_added,
+				engine->zonelist->just_updated);
+		 client_printf(sockfd, buf);
+		 continue;
+	      } else if (zl_changed != ODS_STATUS_UNCHANGED) {
+		 (void)snprintf(buf, ODS_SE_MAXLINE, "Zone list has errors.\n");
+		 client_printf(sockfd, buf);
+	      }
+              */
+	   } else {
+	      pthread_mutex_unlock(&engine->zonelist->zl_lock);
+	   }
+	   break;
+	}
 
         if (!zone) {
             (void)snprintf(buf, ODS_SE_MAXLINE, "Error: Zone %s not found.\n",
                 cmdargument(cmd, NULL, ""));
             client_printf(sockfd, buf);
-            /* update all */
-            cmdhandler_handle_cmd_update(sockfd, context, "update --all");
             return 1;
         }
 
