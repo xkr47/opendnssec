@@ -332,6 +332,7 @@ zonelist_update(zonelist_type* zl, const char* zlfile)
 {
     zonelist_type* new_zlist = NULL;
     time_t st_mtime = 0;
+    time_t now;
     ods_status status = ODS_STATUS_OK;
     char* datestamp = NULL;
 
@@ -340,9 +341,6 @@ zonelist_update(zonelist_type* zl, const char* zlfile)
         return ODS_STATUS_ASSERT_ERR;
     }
     /* is the file updated? */
-    /* OPENDNSSEC-686: changes happening within one second will not be
-     * seen
-     */
     st_mtime = ods_file_lastmodified(zlfile);
     if (st_mtime <= zl->last_modified) {
         (void)time_datestamp(zl->last_modified, "%Y-%m-%d %T", &datestamp);
@@ -359,7 +357,8 @@ zonelist_update(zonelist_type* zl, const char* zlfile)
         zl->just_removed = 0;
         zl->just_added = 0;
         zl->just_updated = 0;
-        new_zlist->last_modified = st_mtime;
+        now = time(NULL);
+        new_zlist->last_modified = now <= st_mtime ? now - 1 : st_mtime;
         zonelist_merge(zl, new_zlist);
         (void)time_datestamp(zl->last_modified, "%Y-%m-%d %T", &datestamp);
         ods_log_debug("[%s] file %s is modified since %s", zl_str, zlfile,
