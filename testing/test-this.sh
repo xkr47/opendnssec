@@ -19,8 +19,8 @@ test_ok=0
 	log_cleanup && syslog_cleanup
 	ods_find_softhsm_module &&
 	run_test ${PWD##*/} .
-) &&
-test_ok=1
+)
+[ $? = 0 ] && test_ok=1
 
 stop_test
 finish
