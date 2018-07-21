@@ -39,6 +39,7 @@
 #include "hsmkey/hsm_key_factory.h"
 #include "keystate/zonelist_update.h"
 #include "keystate/zonelist_export.h"
+#include "signer-api.h"
 
 #include "keystate/zone_del_cmd.h"
 
@@ -111,7 +112,6 @@ run(int sockfd, cmdhandler_ctx_type* context, char *cmd)
     char path[PATH_MAX];
     db_connection_t* dbconn = getconnectioncontext(context);;
     engine_type* engine = getglobalcontext(context);
-    char cmd2[SYSTEM_MAXLEN];
 
     static struct option long_options[] = {
         {"zone", required_argument, 0, 'z'},
@@ -216,8 +216,7 @@ run(int sockfd, cmdhandler_ctx_type* context, char *cmd)
         ods_log_info("[%s] internal zonelist updated successfully", module_str);
     }
 
-    if (snprintf(cmd2, sizeof(cmd2), "%s %s", SIGNER_CLI_UPDATE, "--all") >= (int)sizeof(cmd2)
-        || system(cmd2))
+    if (execute_signer_command("update --all", ODS_SE_SOCKFILE))
     {
         ods_log_error("[%s] unable to notify signer of zone deletion!", module_str);
     }
