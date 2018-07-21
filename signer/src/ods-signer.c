@@ -108,7 +108,7 @@ main(int argc, char* argv[])
         { 0, 0, 0, 0}
     };
     
-    ods_log_init("ods-signerd", 0, NULL, 0);
+    ods_log_init("ods-signerd", 0, NULL, 4);
 
     /* Get the name of the program */
     if((argv0 = strrchr(argv[0],'/')) == NULL)

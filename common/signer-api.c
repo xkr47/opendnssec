@@ -34,7 +34,6 @@
 #include<signal.h>
 #include <errno.h>
 #include <fcntl.h> /* fcntl() */
-#include <stdio.h> /* fprintf() */
 #include <string.h> /* strerror(), strncmp(), strlen(), strcpy(), strncat() */
 #include <strings.h> /* bzero() */
 #include <sys/select.h> /* select(), FD_ZERO(), FD_SET(), FD_ISSET(), FD_CLR() */
@@ -60,7 +59,7 @@
 #include "signer-api.h"
 
 static const char* PROMPT = "cmd> ";
-static const char* cli_str = "client";
+static const char* cli_str = "signer-client";
 
 /**
  * Consume messages in buffer
@@ -113,17 +112,17 @@ extract_msg(char* buf, int *pos, int buflen, int *exitcode, int sockfd)
             }
             switch (opc) {
                 case CLIENT_OPC_STDOUT:
-                    fprintf(stdout, "%s", data);
+                    ods_log_info("[%s] %s", cli_str, data);
                     break;
                 case CLIENT_OPC_STDERR:
-                    fprintf(stdout, "%s", data);
+                    ods_log_warning("[%s] %s", cli_str, data);
                     break;
                 case CLIENT_OPC_PROMPT:
-                    fprintf(stdout, "%s", data); 
+                    ods_log_info("[%s] %s", cli_str, data); 
                     fflush(stdout);
                     /* listen for input here */
                     if (!client_handleprompt(sockfd)) {
-                        fprintf(stdout, "\n");
+                        ods_log_info("[%s]\n", cli_str);
                         *exitcode = ODS_SIGNER_API_STATUS_CLIENT_INPUT_ERROR2;
                         return 1;
                     }
@@ -134,7 +133,7 @@ extract_msg(char* buf, int *pos, int buflen, int *exitcode, int sockfd)
         } else if (datalen+3 > buflen) {
             /* Message is not going to fit! Discard the data already 
              * received */
-            fprintf(stderr, "Daemon message to big, truncating.\n");
+            ods_log_warning("[%s] Daemon message to big, truncating.\n", cli_str);
             datalen -= *pos - 3;
             buf[1] = datalen >> 8;
             buf[2] = datalen & 0xFF;
@@ -167,7 +166,7 @@ interface_start(const char* cmd, const char* servsock_filename)
 
     /* Create a socket */
     if ((sockfd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-        fprintf(stderr, "Socket creation failed: %s\n", strerror(errno));
+        ods_log_error("[%s] Socket creation failed: %s\n", cli_str, strerror(errno));
         return ODS_SIGNER_API_STATUS_SOCKET_CREATION_FAILED;
     }
     bzero(&servaddr, sizeof(servaddr));
@@ -182,18 +181,18 @@ interface_start(const char* cmd, const char* servsock_filename)
                     close(sockfd);
                     return ODS_SIGNER_API_STATUS_OK;
                 }
-                fprintf(stderr, "Failed to start signer engine\n");
+                ods_log_error("[%s] Failed to start signer engine\n", cli_str);
                 close(sockfd);
                 return ODS_SIGNER_API_STATUS_COMMAND_FAILED;
             } else if (strcmp(cmd, "running\n") == 0) {
-                fprintf(stdout, "Engine not running.\n");
+                ods_log_info("[%s] Engine not running.\n", cli_str);
                 close(sockfd);
                 return ODS_SIGNER_API_STATUS_NOT_RUNNING_OR_START_FAILED;
             }
         }
-        fprintf(stderr, 
-            "Unable to connect to engine. connect() failed: "
-            "%s (\"%s\")\n", strerror(errno), servsock_filename);
+        ods_log_error(
+            "[%s] Unable to connect to engine. connect() failed: "
+            "%s (\"%s\")\n", cli_str, strerror(errno), servsock_filename);
         close(sockfd);
         return ODS_SIGNER_API_STATUS_CONNECT_FAILED;
     }
@@ -251,8 +250,8 @@ interface_start(const char* cmd, const char* servsock_filename)
                 /* only try start on fail to send */
                 if (strcmp(userbuf, "start") == 0) {
                     if (system(ODS_EN_ENGINE) != 0) {
-                        fprintf(stderr, "Error: Daemon reported a failure starting. "
-                            "Please consult the logfiles.\n");
+                        ods_log_error("[%s] Error: Daemon reported a failure starting. "
+                            "Please consult the logfiles.\n", cli_str);
                         error = ODS_SIGNER_API_STATUS_NOT_RUNNING_OR_START_FAILED;
                     }
                     continue;
@@ -278,7 +277,7 @@ interface_start(const char* cmd, const char* servsock_filename)
             if (FD_ISSET(sockfd, &rset)) { /*daemon pipe is readable*/
                 n = read(sockfd, inbuf+inbuf_pos, ODS_SE_MAXLINE-inbuf_pos);
                 if (n == 0) { /* daemon closed pipe */
-                    fprintf(stderr, "[Remote closed connection]\n");
+                    ods_log_error("[%s] [Remote closed connection]\n", cli_str);
                     error = ODS_SIGNER_API_STATUS_REMOTE_CLOSED_CONNECTION;
                     break;
                 } else if (n == -1) { /* an error */
@@ -290,7 +289,7 @@ interface_start(const char* cmd, const char* servsock_filename)
                 inbuf_pos += n;
                 r = extract_msg(inbuf, &inbuf_pos, ODS_SE_MAXLINE, &exitcode, sockfd);
                 if (r == -1) {
-                    fprintf(stderr, "Error handling message from daemon\n");
+                    ods_log_error("[%s] Error handling message from daemon\n", cli_str);
                     error = ODS_SIGNER_API_STATUS_DAEMON_BAD_MESSAGE;
                     break;
                 } else if (r == 1) {
@@ -299,7 +298,7 @@ interface_start(const char* cmd, const char* servsock_filename)
                     else if (strlen(userbuf) != 0)
                         /* we are interactive so print response.
                          * But also suppress when no command is given. */
-                        fprintf(stderr, "Daemon exit code: %d\n", exitcode);
+                        ods_log_warning("[%s] Daemon exit code: %d\n", cli_str, exitcode);
                     break;
                 }
             }
@@ -316,7 +315,7 @@ interface_start(const char* cmd, const char* servsock_filename)
         fgets(line, 80, cmd2);
         (void) pclose(cmd2);
         pid_t pid = strtoul(line, NULL, 10);
-        fprintf(stdout, "pid %d\n", pid);
+        ods_log_info("[%s] pid %d\n", cli_str, pid);
         int time = 0;
         error = ODS_SIGNER_API_STATUS_OK;
         while (pid > 0) {
@@ -324,8 +323,8 @@ interface_start(const char* cmd, const char* servsock_filename)
                sleep(1);
                time += 1;
                if (time>20) {
-                  printf("signer needs more time to stop...\n");
-                  time = 0;
+                   ods_log_info("[%s] signer needs more time to stop...\n", cli_str);
+                   time = 0;
                }
            }
            else
