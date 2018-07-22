@@ -16,8 +16,8 @@ if [ \! -f $INSTALL_ROOT/.softhsm2.ok ] ; then
               --with-migrate --disable-p11-kit \
               --with-crypto-backend=openssl \
               --disable-ecc --disable-gost
-  make
-  make install
+  make -j6
+  make -j6 install
   cp "src/lib/common/softhsm2.conf" "$INSTALL_ROOT/etc/softhsm2.conf.build"
   touch $INSTALL_ROOT/.softhsm2.ok
   echo "2.4.0" > $INSTALL_ROOT/.softhsm2.build
