@@ -10,7 +10,7 @@
 #include "cmdhandler.h"
 #include "signercommands.h"
 #include "clientpipe.h"
-#include "ods-signer-api.h"
+#include "signer-api.h"
 
 static char const * cmdh_str = "cmdhandler";
 

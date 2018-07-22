@@ -57,7 +57,7 @@
 #include "log.h"
 #include "str.h"
 #include "clientpipe.h"
-#include "ods-signer-api.h"
+#include "signer-api.h"
 
 static const char* PROMPT = "cmd> ";
 static const char* cli_str = "client";
