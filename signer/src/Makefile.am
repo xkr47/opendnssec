@@ -16,7 +16,7 @@ signerdir =     @libdir@/opendnssec/signer
 sbin_PROGRAMS = ods-signerd ods-signer
 # man8_MANS =     man/ods-signer.8 man/ods-signerd.8
 
-ods_signerd_SOURCES=		ods-signerd.c \
+ods_signerd_SOURCES=		ods-signerd.c ods-signer-api.h \
 				adapter/adapi.c adapter/adapi.h \
 				adapter/adapter.c adapter/adapter.h \
 				adapter/addns.c adapter/addns.h \
@@ -62,7 +62,7 @@ ods_signerd_LDADD=		$(LIBHSM)
 ods_signerd_LDADD+=		$(LIBCOMPAT)
 ods_signerd_LDADD+=		@LDNS_LIBS@ @XML2_LIBS@ @PTHREAD_LIBS@ @RT_LIBS@ @SSL_LIBS@ @C_LIBS@
 
-ods_signer_SOURCES=		ods-signer.c
+ods_signer_SOURCES=		ods-signer.c ods-signer-api.c ods-signer-api.h
 
 ods_signer_LDADD=		$(LIBHSM)
 ods_signer_LDADD+=		$(LIBCOMPAT)

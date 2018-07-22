@@ -10,6 +10,7 @@
 #include "cmdhandler.h"
 #include "signercommands.h"
 #include "clientpipe.h"
+#include "ods-signer-api.h"
 
 static char const * cmdh_str = "cmdhandler";
 
@@ -39,7 +40,7 @@ cmdargument(const char* cmd, const char* matchValue, const char* defaultValue)
  * Handle the 'help' command.
  *
  */
-static int
+static ods_signer_api_status
 cmdhandler_handle_cmd_help(int sockfd, cmdhandler_ctx_type* context, char *cmd)
 {
     char buf[ODS_SE_MAXLINE];
@@ -80,7 +81,7 @@ cmdhandler_handle_cmd_help(int sockfd, cmdhandler_ctx_type* context, char *cmd)
         "verbosity <nr>              Set verbosity.\n"
     );
     client_printf(sockfd, buf);
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
@@ -100,7 +101,7 @@ cmdhandler_handle_cmd_zones(int sockfd, cmdhandler_ctx_type* context, char *cmd)
     if (!engine->zonelist || !engine->zonelist->zones) {
         (void)snprintf(buf, ODS_SE_MAXLINE, "There are no zones configured\n");
         client_printf(sockfd, buf);
-        return 0;
+        return ODS_SIGNER_API_STATUS_OK;
     }
     /* how many zones */
     pthread_mutex_lock(&engine->zonelist->zl_lock);
@@ -119,7 +120,7 @@ cmdhandler_handle_cmd_zones(int sockfd, cmdhandler_ctx_type* context, char *cmd)
         node = ldns_rbtree_next(node);
     }
     pthread_mutex_unlock(&engine->zonelist->zl_lock);
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
@@ -187,7 +188,7 @@ cmdhandler_handle_cmd_update(int sockfd, cmdhandler_ctx_type* context, char *cmd
             client_printf(sockfd, buf);
             /* update all */
             cmdhandler_handle_cmd_update(sockfd, context, "update --all");
-            return 1;
+            return ODS_SIGNER_API_STATUS_COMMAND_FAILED;
         }
 
         pthread_mutex_lock(&zone->zone_lock);
@@ -201,7 +202,7 @@ cmdhandler_handle_cmd_update(int sockfd, cmdhandler_ctx_type* context, char *cmd
             cmdh_str, cmdargument(cmd, NULL, ""));
         engine_wakeup_workers(engine);
     }
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
@@ -247,7 +248,7 @@ cmdhandler_handle_cmd_retransfer(int sockfd, cmdhandler_ctx_type* context, char 
         client_printf(sockfd, buf);
         ods_log_verbose("[%s] zone %s being re-transfered", cmdh_str, cmdargument(cmd, NULL, ""));
     }
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
@@ -267,14 +268,14 @@ forceread(engine_type* engine, zone_type *zone, int force_serial, uint32_t seria
                 zone->db->inbserial))) {
                 pthread_mutex_unlock(&zone->zone_lock);
                 client_printf(sockfd, "Error: Unable to enforce serial %u for zone %s.\n", serial, zone->name);
-                return 1;
+                return ODS_SIGNER_API_STATUS_COMMAND_FAILED;
             }
             zone->db->altserial = serial;
             zone->db->force_serial = 1;
         }
         schedule_scheduletask(engine->taskq, TASK_FORCEREAD, zone->name, zone, &zone->zone_lock, schedule_IMMEDIATELY);
         pthread_mutex_unlock(&zone->zone_lock);
-        return 0;
+        return ODS_SIGNER_API_STATUS_OK;
 }
 
 /**
@@ -313,20 +314,20 @@ cmdhandler_handle_cmd_sign(int sockfd, cmdhandler_ctx_type* context, char *cmd)
                 (void)snprintf(buf, ODS_SE_MAXLINE, "Error: Expecting <zone> "
                     "--serial <nr>, got %s.\n", cmdargument(cmd, NULL, ""));
                 client_printf(sockfd, buf);
-                return -1;
+                return ODS_SIGNER_API_STATUS_WRONG_ARGS;
             }
             delim2 = strchr(delim1+1, ' ');
             if (!delim2) {
                 (void)snprintf(buf, ODS_SE_MAXLINE, "Error: Expecting serial.\n");
                 client_printf(sockfd, buf);
-                return -1;
+                return ODS_SIGNER_API_STATUS_WRONG_ARGS;
             }
             serial = (uint32_t) strtol(delim2+1, &end, 10);
             if (*end != '\0') {
                 (void)snprintf(buf, ODS_SE_MAXLINE, "Error: Expecting serial, "
                     "got %s.\n", delim2+1);
                 client_printf(sockfd, buf);
-                return -1;
+                return ODS_SIGNER_API_STATUS_WRONG_ARGS;
             }
             force_serial = 1;
             *delim1 = '\0';
@@ -346,7 +347,7 @@ cmdhandler_handle_cmd_sign(int sockfd, cmdhandler_ctx_type* context, char *cmd)
             (void)snprintf(buf, ODS_SE_MAXLINE, "Error: Zone %s not found.\n",
                 cmdargument(cmd, NULL, ""));
             client_printf(sockfd, buf);
-            return 1;
+            return ODS_SIGNER_API_STATUS_COMMAND_FAILED;
         }
 
         forceread(engine, zone, force_serial, serial, sockfd);
@@ -354,7 +355,7 @@ cmdhandler_handle_cmd_sign(int sockfd, cmdhandler_ctx_type* context, char *cmd)
         client_printf(sockfd, "Zone %s scheduled for immediate re-sign.\n", cmdargument(cmd, NULL, ""));
         ods_log_verbose("zone %s scheduled for immediate re-sign", cmdargument(cmd, NULL, ""));
     }
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 /**
@@ -410,7 +411,7 @@ cmdhandler_handle_cmd_clear(int sockfd, cmdhandler_ctx_type* context, char *cmd)
         if (!zone->signconf || !zone->ixfr || !zone->db) {
             ods_fatal_exit("[%s] unable to clear zone %s: failed to recreate"
             "signconf, ixfr of db structure (out of memory?)", cmdh_str, cmdargument(cmd, NULL, ""));
-            return 1;
+            return ODS_SIGNER_API_STATUS_COMMAND_FAILED;
         }
         /* restore serial management */
         zone->db->inbserial = inbserial;
@@ -434,7 +435,7 @@ cmdhandler_handle_cmd_clear(int sockfd, cmdhandler_ctx_type* context, char *cmd)
             cmdh_str, cmdargument(cmd, NULL, ""));
     }
     client_printf(sockfd, buf);
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
@@ -458,7 +459,7 @@ cmdhandler_handle_cmd_queue(int sockfd, cmdhandler_ctx_type* context, char *cmd)
     if (!engine->taskq || !engine->taskq->tasks) {
         (void)snprintf(buf, ODS_SE_MAXLINE, "There are no tasks scheduled.\n");
         client_printf(sockfd, buf);
-        return 0;
+        return ODS_SIGNER_API_STATUS_OK;
     }
     /* current time */
     now = time_now();
@@ -485,7 +486,7 @@ cmdhandler_handle_cmd_queue(int sockfd, cmdhandler_ctx_type* context, char *cmd)
         node = ldns_rbtree_next(node);
     }
     pthread_mutex_unlock(&engine->taskq->schedule_lock);
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
@@ -505,7 +506,7 @@ cmdhandler_handle_cmd_flush(int sockfd, cmdhandler_ctx_type* context, char *cmd)
     (void)snprintf(buf, ODS_SE_MAXLINE, "All tasks scheduled immediately.\n");
     client_printf(sockfd, buf);
     ods_log_verbose("[%s] all tasks scheduled immediately", cmdh_str);
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
@@ -526,7 +527,7 @@ cmdhandler_handle_cmd_reload(int sockfd, cmdhandler_ctx_type* context, char *cmd
     pthread_mutex_unlock(&engine->signal_lock);
     (void)snprintf(buf, ODS_SE_MAXLINE, "Reloading engine.\n");
     client_printf(sockfd, buf);
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
@@ -546,7 +547,7 @@ cmdhandler_handle_cmd_stop(int sockfd, cmdhandler_ctx_type* context, char *cmd)
     pthread_mutex_unlock(&engine->signal_lock);
     (void)snprintf(buf, ODS_SE_MAXLINE, ODS_SE_STOP_RESPONSE);
     client_printf(sockfd, buf);
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
@@ -560,7 +561,7 @@ cmdhandler_handle_cmd_start(int sockfd, cmdhandler_ctx_type* context, char *cmd)
     char buf[ODS_SE_MAXLINE];
     (void)snprintf(buf, ODS_SE_MAXLINE, "Engine already running.\n");
     client_printf(sockfd, buf);
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
@@ -574,7 +575,7 @@ cmdhandler_handle_cmd_running(int sockfd, cmdhandler_ctx_type* context, char *cm
     char buf[ODS_SE_MAXLINE];
     (void)snprintf(buf, ODS_SE_MAXLINE, "Engine running.\n");
     client_printf(sockfd, buf);
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
@@ -591,7 +592,7 @@ cmdhandler_handle_cmd_verbosity(int sockfd, cmdhandler_ctx_type* context, char *
     ods_log_setverbosity(val);
     (void)snprintf(buf, ODS_SE_MAXLINE, "Verbosity level set to %i.\n", val);
     client_printf(sockfd, buf);
-    return 0;
+    return ODS_SIGNER_API_STATUS_OK;
 }
 
 
