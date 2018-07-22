@@ -1,0 +1,4 @@
+cd ~/jonas/dnssec/workspace/opendnssec/testing ; export INSTALL_TAG=local-test WORKSPACE=`pwd` SVN_REVISION=1 WORKSPACE_ROOT=$HOME/jonas/dnssec/workspace ; cd .. ; testing/build-opendnssec.sh
+
+cd testing/testing/test-cases.d/general.basic.passthrough
+time ../../test-this.sh | hilight ERROR OK '\S+:'  'LINE: \d+'
