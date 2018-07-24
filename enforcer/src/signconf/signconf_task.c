@@ -33,6 +33,7 @@
 #include "file.h"
 #include "daemon/engine.h"
 #include "db/dbw.h"
+#include "signer-api.h"
 
 #include "signconf/signconf_task.h"
 
@@ -62,9 +63,8 @@ perform(task_type* task, char const *zonename, void *userdata, void *context)
     ods_log_info("[%s] signconf done for zone %s, notifying signer",
         module_str, zonename);
         
-    /* TODO: do this better, connect directly or use execve() */
-    if (snprintf(cmd, sizeof(cmd), "%s %s", SIGNER_CLI_UPDATE, zonename) >= (int)sizeof(cmd)
-        || system(cmd))
+    if (snprintf(cmd, sizeof(cmd), "update %s", zonename) >= (int)sizeof(cmd)
+        || execute_signer_command(cmd, ODS_SE_SOCKFILE))
     {
         ods_log_error("[%s] unable to notify signer of signconf changes for zone %s!",
             module_str, zonename);

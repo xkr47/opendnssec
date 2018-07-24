@@ -258,7 +258,7 @@ ods_log_vmsg(int priority, const char* t, const char* s, va_list args)
 #endif /* HAVE_SYSLOG_H */
 
     if (!logfile) {
-        fprintf(stdout, "%s\n", message);
+        fprintf(priority <= LOG_WARNING ? stderr : stdout, "%s\n", message);
         return;
     }
 

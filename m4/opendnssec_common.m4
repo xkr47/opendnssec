@@ -58,16 +58,13 @@ AC_DEFINE_UNQUOTED(OPENDNSSEC_FETCH_PIDFILE,    "$OPENDNSSEC_FETCH_PIDFILE", [Pa
 # signer specific
 OPENDNSSEC_SIGNER_SOCKET=$OPENDNSSEC_PID_DIR/engine.sock
 OPENDNSSEC_SIGNER_ENGINE=$OPENDNSSEC_SBIN_DIR/ods-signerd
-OPENDNSSEC_SIGNER_CLI=$OPENDNSSEC_SBIN_DIR/ods-signer
 OPENDNSSEC_SIGNER_WORKINGDIR=$OPENDNSSEC_STATE_DIR/signer
 
 AC_SUBST([OPENDNSSEC_SIGNER_SOCKET])
 AC_SUBST([OPENDNSSEC_SIGNER_ENGINE])
-AC_SUBST([OPENDNSSEC_SIGNER_CLI])
 
 AC_DEFINE_UNQUOTED(OPENDNSSEC_SIGNER_SOCKET, "$OPENDNSSEC_SIGNER_SOCKET", [Path to the OpenDNSSEC signer socket])
 AC_DEFINE_UNQUOTED(OPENDNSSEC_SIGNER_ENGINE, "$OPENDNSSEC_SIGNER_ENGINE", [Path to the OpenDNSSEC signer engine])
-AC_DEFINE_UNQUOTED(OPENDNSSEC_SIGNER_CLI,    "$OPENDNSSEC_SIGNER_CLI",    [Path to the OpenDNSSEC signer cli])
 
 AC_DEFINE_UNQUOTED(ODS_SE_PIDFILE,       ["$OPENDNSSEC_SIGNER_PIDFILE"],     [Path to the OpenDNSSEC signer engine pid file])
 AC_DEFINE_UNQUOTED(ODS_ZF_PIDFILE,       ["$OPENDNSSEC_FETCH_PIDFILE"],      [Path to the OpenDNSSEC signer engine pid file])
@@ -76,7 +73,6 @@ AC_DEFINE_UNQUOTED(ODS_SE_WORKDIR,       ["$OPENDNSSEC_SIGNER_WORKINGDIR"],  [Pa
 AC_DEFINE_UNQUOTED(ODS_SE_CFGFILE,       ["$OPENDNSSEC_CONFIG_FILE"],        [Path to the OpenDNSSEC config file])
 AC_DEFINE_UNQUOTED(ODS_SE_RNGDIR,        ["$OPENDNSSEC_SCHEMA_DIR"],         [Path to the OpenDNSSEC data files])
 AC_DEFINE_UNQUOTED(ODS_SE_ENGINE,        ["$OPENDNSSEC_SIGNER_ENGINE"],      [Path to the OpenDNSSEC signer engine binary])
-AC_DEFINE_UNQUOTED(ODS_SE_CLI,           ["$OPENDNSSEC_SIGNER_CLI"],         [Path to the OpenDNSSEC signer client binary])
 AC_DEFINE_UNQUOTED(ODS_SE_MAXLINE,       [1024],                             [Maximum line length that the OpenDNSSEC signer client can handle])
 AC_DEFINE_UNQUOTED(ODS_SE_MAX_BACKOFF,   [3600],                             [Number of seconds the OpenDNSSEC signer engine should backoff when a task failed])
 AC_DEFINE_UNQUOTED(ODS_SE_WORKERTHREADS, [4],                                [Default number of worker threads for the OpenDNSSEC signer engine])

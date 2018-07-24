@@ -29,4 +29,5 @@ libcompat_a_SOURCES = \
 	presentation.c presentation.h \
 	janitor.c janitor.h \
 	cfg.c cfg.h \
+	signer-api.c signer-api.h \
 	confparser.c confparser.h
