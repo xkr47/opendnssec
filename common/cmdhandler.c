@@ -119,7 +119,7 @@ cmdhandler_perform_command(const char *cmd, struct cmdhandler_ctx_struct* contex
     struct cmd_func_block* fb;
     int sockfd = context->sockfd;
 
-    ods_log_verbose("received command %s", cmd);
+    ods_log_info("received command %s", cmd);
     if (strlen(cmd) == 0) return 0;
 
     /* Find function claiming responsibility */
@@ -265,7 +265,7 @@ cmdhandler_accept_client(void* arg)
     int err;
     cmdhandler_ctx_type* context = (cmdhandler_ctx_type*) arg;
 
-    ods_log_debug("[%s] accept client %i", module_str, context->sockfd);
+    ods_log_info("[%s] accept client %i", module_str, context->sockfd);
 
     if (context->cmdhandler->createlocalcontext) {
         context->localcontext = context->cmdhandler->createlocalcontext(context->globalcontext);

@@ -1851,7 +1851,8 @@ syslog_waitfor_count ()
 
 	echo "syslog_waitfor_count: waiting for syslog to contain $count counts of (timeout $timeout): $grep_string"
 	while true; do
-		count_found=`$GREP -- "$grep_string" "_syslog.$BUILD_TAG" 2>/dev/null | wc -l 2>/dev/null`
+	  count_found=`$GREP -- "$grep_string" "_syslog.$BUILD_TAG" 2>/dev/null | wc -l 2>/dev/null`
+	        echo "COUNT_FOUND $grep_string = $count_found"
 		if [ "$count_found" -eq "$count" ] 2>/dev/null; then
 			return 0
 		fi

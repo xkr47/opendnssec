@@ -336,7 +336,7 @@ zonelist_update(zonelist_type* zl, const char* zlfile)
     ods_status status = ODS_STATUS_OK;
     char* datestamp = NULL;
 
-    ods_log_debug("[%s] update zone list", zl_str);
+    ods_log_info("[%s] update zone list", zl_str);
     if (!zl|| !zl->zones || !zlfile) {
         return ODS_STATUS_ASSERT_ERR;
     }

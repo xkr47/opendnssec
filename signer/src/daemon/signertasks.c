@@ -212,15 +212,19 @@ do_readsignconf(task_type* task, const char* zonename, void* zonearg, void *cont
     engine_type* engine = context->engine;
     zone_type* zone = zonearg;
     ods_status status;
+    ods_log_info("DELAYING do_readsignconf %s", zonename);
+    
+    ods_log_info("DELAY COMPLETE, EXECUTING do_readsignconf %s", zonename);
     status = tools_signconf(zone);
     if (status == ODS_STATUS_UNCHANGED && !zone->signconf->last_modified) {
-        ods_log_debug("No signconf.xml for zone %s yet", task->owner);
+        ods_log_info("No signconf.xml for zone %s yet", task->owner);
         status = ODS_STATUS_ERR;
         zone->zoneconfigvalid = 0;
     }
     if (status == ODS_STATUS_OK || status == ODS_STATUS_UNCHANGED) {
         /* status unchanged not really possible */
         schedule_unscheduletask(engine->taskq, TASK_READ, zone->name);
+	ods_log_info("[%s] do_readsignconf -> TASK_READ %s", task->owner, zone->name);
         schedule_scheduletask(engine->taskq, TASK_READ, zone->name, zone, &zone->zone_lock, schedule_PROMPTLY);
         zone->zoneconfigvalid = 1;
         return schedule_SUCCESS;
@@ -249,6 +253,7 @@ do_forcereadsignconf(task_type* task, const char* zonename, void* zonearg, void 
         if(!zone->zoneconfigvalid) {
             zone->zoneconfigvalid = 1;
             schedule_unscheduletask(engine->taskq, TASK_READ, zone->name);
+	ods_log_info("[%s] do_forcereadsignconf1 -> TASK_READ %s", task->owner, zone->name);
             schedule_scheduletask(engine->taskq, TASK_READ, zone->name, zone, &zone->zone_lock, schedule_PROMPTLY);
         }
         return schedule_SUCCESS;
@@ -257,9 +262,11 @@ do_forcereadsignconf(task_type* task, const char* zonename, void* zonearg, void 
         schedule_unscheduletask(engine->taskq, TASK_READ, zone->name);
         schedule_unscheduletask(engine->taskq, TASK_SIGN, zone->name);
         schedule_unscheduletask(engine->taskq, TASK_WRITE, zone->name);
+	ods_log_info("[%s] do_forcereadsignconf2 -> TASK_READ %s", task->owner, zone->name);
         schedule_scheduletask(engine->taskq, TASK_READ, zone->name, zone, &zone->zone_lock, schedule_PROMPTLY);
         return schedule_SUCCESS;
     } else {
+       ods_log_info("[%s] do_forcereadsignconf3 -> status %d", task->owner, (int)status);
         return schedule_SUCCESS;
     }
 }
@@ -335,6 +342,7 @@ do_signzone(task_type* task, const char* zonename, void* zonearg, void *contexta
         return schedule_DEFER; /* backoff */
     }
 
+    ods_log_info("[%s] Schedule TASK_WRITE for zone %s", worker->name, task->owner);
     schedule_scheduletask(engine->taskq, TASK_WRITE, zone->name, zone, &zone->zone_lock, schedule_PROMPTLY);
     return schedule_SUCCESS;
 }
@@ -379,6 +387,7 @@ do_readzone(task_type* task, const char* zonename, void* zonearg, void *contexta
          * The read task can then continue, finding the just created sign task in its path.
          */
         schedule_unscheduletask(engine->taskq, TASK_SIGN, zone->name);
+	ods_log_info("[%s] do_readzone -> TASK_SIGN %s", task->owner, zone->name);
         schedule_scheduletask(engine->taskq, TASK_SIGN, zone->name, zone, &zone->zone_lock, schedule_PROMPTLY);
         return schedule_SUCCESS;
     }
@@ -417,6 +426,7 @@ do_forcereadzone(task_type* task, const char* zonename, void* zonearg, void *con
         schedule_unscheduletask(engine->taskq, TASK_READ, zone->name);
         schedule_unscheduletask(engine->taskq, TASK_SIGN, zone->name);
         schedule_unscheduletask(engine->taskq, TASK_WRITE, zone->name);
+	ods_log_info("[%s] do_forcereadzone -> TASK_SIGN %s", task->owner, zone->name);
         schedule_scheduletask(engine->taskq, TASK_SIGN, zone->name, zone, &zone->zone_lock, schedule_PROMPTLY);
         return schedule_SUCCESS;
     }
@@ -459,6 +469,7 @@ do_writezone(task_type* task, const char* zonename, void* zonearg, void *context
         /* just a warning */
         status = ODS_STATUS_OK;
     }
+    ods_log_info("[%s] do_writezone -> TASK_SIGN %s", worker->name, zone->name);
     schedule_scheduletask(engine->taskq, TASK_SIGN, zone->name, zone, &zone->zone_lock, resign);
     return schedule_SUCCESS;
 }

@@ -177,6 +177,7 @@ cmdhandler_handle_cmd_update(int sockfd, cmdhandler_ctx_type* context, char *cmd
 	   pthread_mutex_lock(&engine->zonelist->zl_lock);
 	   zone = zonelist_lookup_zone_by_name(engine->zonelist, cmdargument(cmd, NULL, ""),
 	       LDNS_RR_CLASS_IN);
+	   client_printf(sockfd, "Looked up\n");
 	   /* If this zone is just added, don't update (it might not have a
             * task yet) */
 	   if (zone && zone->zl_status == ZONE_ZL_ADDED) {
@@ -186,6 +187,7 @@ cmdhandler_handle_cmd_update(int sockfd, cmdhandler_ctx_type* context, char *cmd
 	   } else if (!zone && i == 0) {
 	      pthread_mutex_unlock(&engine->zonelist->zl_lock);
 	      /* update all */
+	      client_printf(sockfd, "Update all\n");
 	      cmdhandler_handle_cmd_update(sockfd, context, "update --all");
 	      continue;
 	      /*
@@ -218,6 +220,7 @@ cmdhandler_handle_cmd_update(int sockfd, cmdhandler_ctx_type* context, char *cmd
         }
 
         pthread_mutex_lock(&zone->zone_lock);
+	ods_log_info("[%s] cmd_update -> TASK_FORCESIGNCONF %s", cmdh_str, zone->name);
         schedule_scheduletask(engine->taskq, TASK_FORCESIGNCONF, zone->name, zone, &zone->zone_lock, schedule_PROMPTLY);
         pthread_mutex_unlock(&zone->zone_lock);
 
@@ -447,6 +450,7 @@ cmdhandler_handle_cmd_clear(int sockfd, cmdhandler_ctx_type* context, char *cmd)
 
         /* If a zone does not have a task we probably never read a signconf
          * for it. Skip reschedule step */
+	ods_log_info("[%s] cmd_clear -> TASK_FORCESIGNCONF %s", cmdh_str, zone->name);
         schedule_scheduletask(engine->taskq, TASK_FORCESIGNCONF, zone->name, zone, &zone->zone_lock, schedule_IMMEDIATELY);
         pthread_mutex_unlock(&zone->zone_lock);
 

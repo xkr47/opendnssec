@@ -691,8 +691,10 @@ engine_update_zones(engine_type* engine, ods_status zl_changed)
         warnings += dnsconfig_zone(engine, zone);
 
         if (zone->zl_status == ZONE_ZL_ADDED) {
-            schedule_scheduletask(engine->taskq, TASK_SIGNCONF, zone->name, zone, &zone->zone_lock, 0);
+	    ods_log_info("[%s] engine_update_zones -> TASK_SIGNCONF %s", engine_str, zone->name);
+	    schedule_scheduletask(engine->taskq, TASK_SIGNCONF, zone->name, zone, &zone->zone_lock, 0);
         } else if (zl_changed == ODS_STATUS_OK) {
+	    ods_log_info("[%s] engine_update_zones -> TASK_FORCESIGNCONF %s", engine_str, zone->name);
             schedule_scheduletask(engine->taskq, TASK_FORCESIGNCONF, zone->name, zone, &zone->zone_lock, 0);
         }
         if (status != ODS_STATUS_OK) {

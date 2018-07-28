@@ -173,7 +173,9 @@ interface_start(const char* cmd, const char* servsock_filename)
     servaddr.sun_family = AF_UNIX;
     strncpy(servaddr.sun_path, servsock_filename, sizeof(servaddr.sun_path) - 1);
     
+    ods_log_info("[%s] connecting\n", cli_str);
     if (connect(sockfd, (const struct sockaddr*) &servaddr, sizeof(servaddr)) == -1) {
+       ods_log_error("[%s] connection failed\n", cli_str);
         if (cmd) {
             if (strncmp(cmd, "start", 5) == 0) {
                 exitcode = system(ODS_SE_ENGINE); 
@@ -196,6 +198,7 @@ interface_start(const char* cmd, const char* servsock_filename)
         close(sockfd);
         return ODS_SIGNER_API_STATUS_CONNECT_FAILED;
     }
+    ods_log_info("[%s] connected\n", cli_str);
     /* set socket to non-blocking */
     if ((flags = fcntl(sockfd, F_GETFL, 0)) == -1) {
         ods_log_error("[%s] unable to start interface, fcntl(F_GETFL) "
@@ -211,7 +214,11 @@ interface_start(const char* cmd, const char* servsock_filename)
     
     /* If we have a cmd send it to the daemon, otherwise display a
      * prompt */
-    if (cmd) client_stdin(sockfd, cmd, strlen(cmd)+1);
+    if (cmd) {
+       ods_log_info("[%s] sending command %s\n", cli_str, cmd);
+       client_stdin(sockfd, cmd, strlen(cmd)+1);
+    }
+    ods_log_info("[%s] entering loop\n", cli_str);
 
     userbuf[0] = 0;
     do {

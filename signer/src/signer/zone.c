@@ -803,6 +803,8 @@ zone_recover2(engine_type* engine, zone_type* zone)
     /* nsec3params part */
     const char* salt = NULL;
 
+    ods_log_info("[%s] zone_recover2 for zone %s", zone_str, zone->name);
+
     ods_log_assert(zone);
     ods_log_assert(zone->name);
     ods_log_assert(zone->signconf);
