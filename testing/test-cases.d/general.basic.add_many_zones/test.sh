@@ -24,7 +24,7 @@
 
 	## wait for signed file to appear
 	for i in `seq 1 $tests` ; do
-		echo "LINE: ${LINENO} zone ${i} " ; syslog_waitfor_count 10 1 'ods-signerd: .*\[STATS\] example'"${i}.com"
+		echo "LINE: ${LINENO} zone ${i} " ; syslog_waitfor_count 60 1 'ods-signerd: .*\[STATS\] example'"${i}.com"
 		echo "LINE: ${LINENO} zone ${i} " ; test -f "$INSTALL_ROOT/var/opendnssec/signed/example${i}.com"
 	done
 
