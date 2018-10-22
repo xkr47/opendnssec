@@ -1187,10 +1187,10 @@ log_grep ()
 	fi
 
 	if [ -n "$output" ]; then
-		$GREP -- "$grep_string" $log_files 2>/dev/null
+		$GREP -- "$grep_string" $log_files 2>/dev/null ||:
 	else
 		echo "log_grep: greping in $name for: $grep_string"
-		$GREP -q -- "$grep_string" $log_files 2>/dev/null
+		$GREP -q -- "$grep_string" $log_files 2>/dev/null ||:
 	fi
 }
 
@@ -1237,7 +1237,7 @@ log_grep_count ()
 	fi
 
 	echo "log_grep_count: greping in $name, should find $count of: $grep_string"
-	count_found=`$GREP -- "$grep_string" $log_files 2>/dev/null | wc -l 2>/dev/null`
+	count_found=`$GREP -- "$grep_string" $log_files 2>/dev/null | wc -l 2>/dev/null || echo 0`
 
 	if [ "$count_found" -eq "$count" ] 2>/dev/null; then
 		return 0
@@ -1851,7 +1851,7 @@ syslog_waitfor_count ()
 
 	echo "syslog_waitfor_count: waiting for syslog to contain $count counts of (timeout $timeout): $grep_string"
 	while true; do
-	  count_found=`$GREP -- "$grep_string" "_syslog.$BUILD_TAG" 2>/dev/null | wc -l 2>/dev/null`
+	  count_found=`$GREP -- "$grep_string" "_syslog.$BUILD_TAG" 2>/dev/null | wc -l 2>/dev/null || echo 0`
 	        echo "COUNT_FOUND $grep_string = $count_found"
 		if [ "$count_found" -eq "$count" ] 2>/dev/null; then
 			return 0
@@ -1886,7 +1886,7 @@ syslog_grep ()
 	fi
 
 	echo "syslog_grep: greping syslog for: $grep_string"
-	$GREP -q -- "$grep_string" "_syslog.$BUILD_TAG" 2>/dev/null
+	$GREP -q -- "$grep_string" "_syslog.$BUILD_TAG" 2>/dev/null ||:
 }
 
 syslog_grep_count ()
@@ -1906,7 +1906,7 @@ syslog_grep_count ()
 	fi
 
 	echo "syslog_grep_count: greping syslog, should find $count of: $grep_string"
-	count_found=`$GREP -- "$grep_string" "_syslog.$BUILD_TAG" 2>/dev/null | wc -l 2>/dev/null`
+	count_found=`$GREP -- "$grep_string" "_syslog.$BUILD_TAG" 2>/dev/null | wc -l 2>/dev/null || echo 0`
 
 	if [ "$count_found" -eq "$count" ] 2>/dev/null; then
 		return 0
@@ -1930,8 +1930,7 @@ syslog_grep_count2 ()
 		exit 1
 	fi
 
-	count_found=`$GREP -- "$grep_string" "_syslog.$BUILD_TAG" 2>/dev/null | wc -l 2>/dev/null | awk '{print $1}'`
-
+	count_found=`( $GREP -- "$grep_string" "_syslog.$BUILD_TAG" 2>/dev/null ||: ) | wc -l 2>/dev/null | awk '{print $1}'`
 	if [ "$count_found" -lt 0 ] 2>/dev/null; then
 		echo "syslog_grep_count: Invalid count returned from wc -l '$count_found'" >&2
 		exit 1
@@ -2187,7 +2186,7 @@ waitfor_count_this ()
 
 	echo "waitfor_count_this: waiting for $file to contain $count counts of (timeout $timeout): $grep_string"
 	while true; do
-		count_found=`$GREP -- "$grep_string" "$file" 2>/dev/null | wc -l 2>/dev/null`
+		count_found=`$GREP -- "$grep_string" "$file" 2>/dev/null | wc -l 2>/dev/null || echo 0`
 		if [ "$count_found" -eq "$count" ] 2>/dev/null; then
 			return 0
 		fi
@@ -2222,7 +2221,7 @@ grep_this ()
 	fi
 
 	echo "grep_this: greping in $file for: $grep_string"
-	$GREP -q -- "$grep_string" "$file" 2>/dev/null
+	$GREP -q -- "$grep_string" "$file" 2>/dev/null ||:
 }
 
 grep_count_this ()
@@ -2243,7 +2242,7 @@ grep_count_this ()
 	fi
 
 	echo "grep_count_this: greping in $file, should find $count of: $grep_string"
-	count_found=`$GREP -- "$grep_string" "$file" 2>/dev/null | wc -l 2>/dev/null`
+	count_found=`$GREP -- "$grep_string" "$file" 2>/dev/null | wc -l 2>/dev/null || echo 0`
 
 	if [ "$count_found" -eq "$count" ] 2>/dev/null; then
 		return 0
@@ -2268,7 +2267,7 @@ grep_count_this2 ()
 		exit 1
 	fi
 
-	count_found=`$GREP -- "$grep_string" "$file" 2>/dev/null | wc -l 2>/dev/null | awk '{print $1}`
+	count_found=`$GREP -- "$grep_string" "$file" 2>/dev/null | wc -l 2>/dev/null | awk '{print $1} || echo 0`
 
 	if [ "$count_found" -lt 0 ] 2>/dev/null; then
 		echo "grep_count_this2: Invalid count returned from wc -l '$count_found'" >&2
