@@ -213,7 +213,7 @@ do_readsignconf(task_type* task, const char* zonename, void* zonearg, void *cont
     zone_type* zone = zonearg;
     ods_status status;
     ods_log_info("DELAYING do_readsignconf %s", zonename);
-    
+    usleep(1000);
     ods_log_info("DELAY COMPLETE, EXECUTING do_readsignconf %s", zonename);
     status = tools_signconf(zone);
     if (status == ODS_STATUS_UNCHANGED && !zone->signconf->last_modified) {
